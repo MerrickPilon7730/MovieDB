@@ -6,7 +6,6 @@ import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 
 class ApiClient {
-
     private val client = OkHttpClient()
     private val json = "application/json; charset=utf-8".toMediaType()
 
@@ -17,5 +16,4 @@ class ApiClient {
 
         client.newCall(request).enqueue(callback)
     }
-
 }
