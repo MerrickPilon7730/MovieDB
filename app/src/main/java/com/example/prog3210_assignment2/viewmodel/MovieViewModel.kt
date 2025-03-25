@@ -26,10 +26,13 @@ class MovieViewModel : ViewModel() {
     private val apiKey = "97d44d3e"
 
     fun searchForMovie(movieTitle: String) {
-        val urlString = "http://www.omdbapi.com/?apikey=$apiKey&s=$movieTitle&type=movie"
+        // Encode the movie title to handle spaces and special characters
+        val encodedTitle = java.net.URLEncoder.encode(movieTitle, "UTF-8")
+        val urlString = "https://www.omdbapi.com/?apikey=$apiKey&s=$encodedTitle&type=movie"
         apiClient.fetchMovieData(urlString, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // Log or handle error
+                // Log or handle error here
+                e.printStackTrace()
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -47,7 +50,7 @@ class MovieViewModel : ViewModel() {
     }
 
     fun getMovieDetails(imdbID: String) {
-        val urlString = "http://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
+        val urlString = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
         apiClient.fetchMovieData(urlString, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 // Handle error if needed
