@@ -27,7 +27,7 @@ class MyAdapter(private val context: Context, private var items: List<MovieSearc
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val movie = items[position]
         holder.title.text = movie.Title
-        holder.description.text = "Year: ${movie.Year} | Type: ${movie.Type}"
+        holder.description.text = "Year: ${movie.Year}"
         Glide.with(context)
             .load(movie.Poster)
             .into(holder.imageView)

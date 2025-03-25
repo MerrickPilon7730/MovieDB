@@ -48,8 +48,6 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.movieWriter.text = "Writer: ${movie.Writer ?: "N/A"}"
             binding.movieActors.text = "Actors: ${movie.Actors ?: "N/A"}"
             binding.moviePlot.text = "Plot: ${movie.Plot ?: "N/A"}"
-            binding.movieLanguage.text = "Language: ${movie.Language ?: "N/A"}"
-            binding.movieCountry.text = "Country: ${movie.Country ?: "N/A"}"
             binding.movieAwards.text = "Awards: ${movie.Awards ?: "N/A"}"
             binding.movieBoxOffice.text = "Box Office: ${movie.BoxOffice ?: "N/A"}"
 

@@ -2,6 +2,7 @@ package com.example.prog3210_assignment2.view
 
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -30,6 +31,21 @@ class MainActivity : AppCompatActivity(), MovieClickListener {
         // Setup RecyclerView
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = myAdapter
+
+        // This allows you to hit enter after inputting your search params, same functionality as clicking search
+        binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val query = binding.searchEditText.text.toString().trim()
+                if (query.isNotEmpty()) {
+                    movieViewModel.searchForMovie(query)
+                } else {
+                    Toast.makeText(this, "Enter a movie title", Toast.LENGTH_SHORT).show()
+                }
+                true
+            } else {
+                false
+            }
+        }
 
         // Setup the search button click listener
         binding.searchButton.setOnClickListener {
