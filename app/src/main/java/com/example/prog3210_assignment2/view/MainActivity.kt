@@ -1,6 +1,7 @@
 package com.example.prog3210_assignment2.view
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -47,10 +48,16 @@ class MainActivity : AppCompatActivity(), MovieClickListener {
     }
 
     // MovieClickListener callback: when an item is clicked, start details activity.
-    override fun onClick(v: android.view.View?, pos: Int) {
+    override fun onClick(v: View?, pos: Int) {
         val movie: MovieSearchResult? = movieViewModel.searchResults.value?.get(pos)
         movie?.let {
-            MovieDetailsActivity.start(this, it.imdbID)
+            // Make sure imdbID is valid
+            if (it.imdbID.isNotEmpty()) {
+                MovieDetailsActivity.start(this, it.imdbID)
+            } else {
+                Toast.makeText(this, "Invalid movie ID", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
 }

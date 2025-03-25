@@ -17,8 +17,11 @@ class MyViewHolder(itemView: View, private val clickListener: MovieClickListener
 
     init {
         itemView.setOnClickListener {
-            Log.d("tag", "onViewHolder Click")
-            clickListener?.onClick(itemView, adapterPosition)
+            val pos = adapterPosition
+            if (pos != RecyclerView.NO_POSITION) {
+                clickListener?.onClick(itemView, pos)
+            }
         }
     }
 }
+

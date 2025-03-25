@@ -1,5 +1,6 @@
 package com.example.prog3210_assignment2.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -50,19 +51,25 @@ class MovieViewModel : ViewModel() {
     }
 
     fun getMovieDetails(imdbID: String) {
-        val urlString = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
+        val urlString = "http://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
         apiClient.fetchMovieData(urlString, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // Handle error if needed
+                e.printStackTrace()
             }
-
             override fun onResponse(call: Call, response: Response) {
                 response.body?.let { responseBody ->
                     val json = responseBody.string()
-                    val movie = gson.fromJson(json, MovieModel::class.java)
-                    _movieData.postValue(movie)
+                    // Log the JSON for debugging
+                    Log.d("MovieDetails", json)
+                    try {
+                        val movie = gson.fromJson(json, MovieModel::class.java)
+                        _movieData.postValue(movie)
+                    } catch (e: Exception) {
+                        Log.e("MovieDetails", "Parsing error", e)
+                    }
                 }
             }
         })
     }
+
 }
