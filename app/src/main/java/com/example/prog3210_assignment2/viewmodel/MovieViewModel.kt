@@ -51,7 +51,7 @@ class MovieViewModel : ViewModel() {
     }
 
     fun getMovieDetails(imdbID: String) {
-        val urlString = "http://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
+        val urlString = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
         apiClient.fetchMovieData(urlString, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
