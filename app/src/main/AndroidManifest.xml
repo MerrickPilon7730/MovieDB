@@ -32,7 +32,9 @@
         <activity
             android:name=".view.RegisterActivity"
             android:exported="true" />
-
+        <activity
+            android:name=".view.FavoritesFragment"
+            android:exported="true" />
     </application>
 
 </manifest>

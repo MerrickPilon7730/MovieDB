@@ -1,79 +1,45 @@
 package com.example.prog3210_assignment2.view
 
 import android.os.Bundle
-import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.example.prog3210_assignment2.R
 import com.example.prog3210_assignment2.databinding.ActivityMainBinding
-import com.example.prog3210_assignment2.model.MovieSearchResult
-import com.example.prog3210_assignment2.utils.MovieClickListener
-import com.example.prog3210_assignment2.utils.MyAdapter
-import com.example.prog3210_assignment2.viewmodel.MovieViewModel
 
-class MainActivity : AppCompatActivity(), MovieClickListener {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val movieViewModel: MovieViewModel by viewModels()
-    private lateinit var myAdapter: MyAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize adapter with an empty list and set the click listener
-        myAdapter = MyAdapter(this, listOf())
-        myAdapter.setMovieClickListener(this)
+        // 1) ViewPager2 adapter
+        binding.viewPager.adapter = object : FragmentStateAdapter(this) {
+            override fun getItemCount() = 2
+            override fun createFragment(pos: Int): Fragment =
+                if (pos == 0) SearchFragment() else FavoritesFragment()
+        }
 
-        // Setup RecyclerView
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = myAdapter
-
-        // This allows you to hit enter after inputting your search params, same functionality as clicking search
-        binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = binding.searchEditText.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    movieViewModel.searchForMovie(query)
-                } else {
-                    Toast.makeText(this, "Enter a movie title", Toast.LENGTH_SHORT).show()
+        // 2) swipe → bottomNav
+        binding.viewPager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    binding.bottomNav.menu.getItem(position).isChecked = true
                 }
-                true
-            } else {
-                false
             }
-        }
+        )
 
-        // Setup the search button click listener
-        binding.searchButton.setOnClickListener {
-            val query = binding.searchEditText.text.toString().trim()
-            if (query.isNotEmpty()) {
-                movieViewModel.searchForMovie(query)
-            } else {
-                Toast.makeText(this, "Enter a movie title", Toast.LENGTH_SHORT).show()
+        // 3) bottomNav → swipe
+        binding.bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_search     -> binding.viewPager.currentItem = 0
+                R.id.nav_favourites -> binding.viewPager.currentItem = 1
             }
-        }
-
-        // Observe the search results and update the adapter
-        movieViewModel.searchResults.observe(this) { results ->
-            myAdapter.updateList(results)
+            true
         }
     }
-
-    // MovieClickListener callback: when an item is clicked, start details activity.
-    override fun onClick(v: View?, pos: Int) {
-        val movie: MovieSearchResult? = movieViewModel.searchResults.value?.get(pos)
-        movie?.let {
-            // Make sure imdbID is valid
-            if (it.imdbID.isNotEmpty()) {
-                MovieDetailsActivity.start(this, it.imdbID)
-            } else {
-                Toast.makeText(this, "Invalid movie ID", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
 }
