@@ -8,7 +8,6 @@
     android:background="@color/black"
     android:fitsSystemWindows="true">
 
-    <!-- Scrollable content -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
@@ -179,7 +178,6 @@
 
     </ScrollView>
 
-    <!-- Back Button at the Bottom -->
     <Button
         android:id="@+id/backButton"
         android:layout_width="0dp"
