@@ -174,7 +174,19 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/movieAwards" />
 
+            <Button
+                android:id="@+id/addToFavoritesButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:layout_marginTop="40dp"
+                android:text="Add to Favorites"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movieAwards"
+                tools:layout_editor_absoluteX="24dp" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     </ScrollView>
 

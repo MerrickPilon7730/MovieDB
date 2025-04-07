@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.prog3210_assignment2.databinding.ActivityMovieDetailsBinding
 import com.example.prog3210_assignment2.viewmodel.MovieViewModel
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+
 
 class MovieDetailsActivity : AppCompatActivity() {
 
@@ -55,7 +58,27 @@ class MovieDetailsActivity : AppCompatActivity() {
                 .load(movie.Poster)
                 .into(binding.moviePoster)
         }
+        binding.addToFavoritesButton.setOnClickListener {
+            val movie = movieViewModel.movieData.value
+            if (movie != null && movie.imdbID.isNotEmpty()) {
+                val favMap = hashMapOf(
+                    "title" to movie.Title,
+                    "year" to movie.Year,
+                    "poster" to movie.Poster,
+                    "imdbID" to movie.imdbID
+                )
 
+                Firebase.firestore.collection("favorites")
+                    .document(movie.imdbID)
+                    .set(favMap)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Failed to add: ${it.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }
         binding.backButton.setOnClickListener {
             finish()
         }
