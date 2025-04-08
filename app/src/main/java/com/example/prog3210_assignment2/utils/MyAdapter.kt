@@ -9,9 +9,10 @@ import com.example.prog3210_assignment2.R
 import com.example.prog3210_assignment2.model.MovieSearchResult
 import com.example.prog3210_assignment2.view.MyViewHolder
 
-// In MyAdapter.kt
-class MyAdapter(private val context: Context, private var items: List<MovieSearchResult>) :
-    RecyclerView.Adapter<MyViewHolder>() {
+class MyAdapter(
+    private val context: Context,
+    private var items: List<MovieSearchResult>
+) : RecyclerView.Adapter<MyViewHolder>() {
 
     var clickListener: MovieClickListener? = null
 
@@ -28,9 +29,7 @@ class MyAdapter(private val context: Context, private var items: List<MovieSearc
         val movie = items[position]
         holder.title.text = movie.Title
         holder.description.text = "Year: ${movie.Year}"
-        Glide.with(context)
-            .load(movie.Poster)
-            .into(holder.imageView)
+        Glide.with(context).load(movie.Poster).into(holder.imageView)
     }
 
     override fun getItemCount(): Int = items.size
@@ -39,6 +38,12 @@ class MyAdapter(private val context: Context, private var items: List<MovieSearc
         items = newItems
         notifyDataSetChanged()
     }
+
+    /**
+     *  Provide read-only access to the current list,
+     *  so the fragment can retrieve the clicked item by position.
+     */
+    fun getItems(): List<MovieSearchResult> {
+        return items
+    }
 }
-
-

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.prog3210_assignment2.databinding.FragmentFavouriteBinding
 import com.example.prog3210_assignment2.model.MovieModel
 import com.example.prog3210_assignment2.model.MovieSearchResult
+import com.example.prog3210_assignment2.utils.MovieClickListener
 import com.example.prog3210_assignment2.utils.MyAdapter
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -22,7 +23,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-class FavoritesFragment : Fragment() {
+class FavoritesFragment : Fragment(), MovieClickListener {
 
     private var _binding: FragmentFavouriteBinding? = null
     private val binding get() = _binding!!
@@ -41,13 +42,17 @@ class FavoritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = MyAdapter(requireContext(), emptyList())
+        adapter.setMovieClickListener(this)
+
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@FavoritesFragment.adapter
         }
 
+        // Show loading indicator
         binding.loadingIndicator.visibility = View.VISIBLE
 
+        // Load favorites from Firestore
         loadFavoriteMovies()
     }
 
@@ -112,6 +117,18 @@ class FavoritesFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 null
+            }
+        }
+    }
+
+    // Called when user taps a movie in Favorites
+    override fun onClick(v: View?, pos: Int) {
+        val currentList = adapter.getItems()
+        if (pos in currentList.indices) {
+            val movie = currentList[pos]
+            if (movie.imdbID.isNotEmpty()) {
+                // Pass `true` so that MovieDetailsActivity hides the 'Add to Favorites' button
+                MovieDetailsActivity.start(requireContext(), movie.imdbID, fromFavorites = true)
             }
         }
     }
