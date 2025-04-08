@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.prog3210_assignment2.R
 import com.example.prog3210_assignment2.utils.MovieClickListener
 
+// MyViewHolder is a custom ViewHolder for displaying movie items in a RecyclerView.
+// It binds the movie data to the views and sets up a click listener for each item.
 class MyViewHolder(itemView: View, private val clickListener: MovieClickListener?) :
     RecyclerView.ViewHolder(itemView) {
 

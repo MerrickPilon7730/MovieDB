@@ -30,6 +30,7 @@ class MovieViewModel : ViewModel() {
     private val gson = Gson()
     private val apiKey = "97d44d3e"
 
+    // Seach for movies 
     fun searchForMovie(movieTitle: String) {
         val encodedTitle = java.net.URLEncoder.encode(movieTitle, "UTF-8")
         val urlString = "https://www.omdbapi.com/?apikey=$apiKey&s=$encodedTitle&type=movie"
@@ -51,6 +52,7 @@ class MovieViewModel : ViewModel() {
         })
     }
 
+    // get movie deatils for particular movie 
     fun getMovieDetails(imdbID: String) {
         val urlString = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbID&plot=full"
         apiClient.fetchMovieData(urlString, object : Callback {
@@ -72,6 +74,9 @@ class MovieViewModel : ViewModel() {
         })
     }
 
+    // fect movies as search result using the imdb id
+    // using suspend function to fetch movie details in a coroutine
+    // This function is called from the UI thread and will suspend until the result is available.
     suspend fun fetchMovieAsSearchResult(imdbId: String): MovieSearchResult? =
         withContext(Dispatchers.IO) {
             val url = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbId"

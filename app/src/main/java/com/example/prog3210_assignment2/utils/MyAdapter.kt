@@ -9,6 +9,8 @@ import com.example.prog3210_assignment2.R
 import com.example.prog3210_assignment2.model.MovieSearchResult
 import com.example.prog3210_assignment2.view.MyViewHolder
 
+// Class to handle the RecyclerView adapter for displaying movie search results
+// It extends RecyclerView.Adapter and uses a ViewHolder pattern for performance
 class MyAdapter(
     private val context: Context,
     private var items: List<MovieSearchResult>

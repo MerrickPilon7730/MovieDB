@@ -29,7 +29,7 @@ class FavoritesFragment : Fragment(), MovieClickListener {
     private var _binding: FragmentFavouriteBinding? = null
     private val binding get() = _binding!!
 
-    // Add the activityViewModels delegate to share the same instance.
+    // Using the ViewModel from the activity to share data between fragments
     private val movieViewModel: MovieViewModel by activityViewModels()
 
     private lateinit var adapter: MyAdapter
@@ -61,6 +61,8 @@ class FavoritesFragment : Fragment(), MovieClickListener {
         loadFavoriteMovies()
     }
 
+    // Load favorite movies from Firestore
+    // and update the RecyclerView adapter with the fetched data
     private fun loadFavoriteMovies() {
         val uid = Firebase.auth.currentUser?.uid
         if (uid == null) {
@@ -68,6 +70,8 @@ class FavoritesFragment : Fragment(), MovieClickListener {
             return
         }
 
+        // Fetch the list of favorite movies from Firestore
+        // and update the RecyclerView adapter with the fetched data
         Firebase.firestore.collection("users")
             .document(uid)
             .collection("favorites")

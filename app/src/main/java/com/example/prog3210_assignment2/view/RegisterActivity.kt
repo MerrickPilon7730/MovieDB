@@ -12,6 +12,9 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var binding: RegisterBinding
     private val auth = FirebaseAuth.getInstance()
 
+    // RegisterActivity is responsible for user registration.
+    // It validates user input, creates a new user with Firebase Authentication,
+    // and handles success or failure responses.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = RegisterBinding.inflate(layoutInflater)

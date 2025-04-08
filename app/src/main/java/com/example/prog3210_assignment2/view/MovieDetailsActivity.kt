@@ -25,9 +25,12 @@ class MovieDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMovieDetailsBinding
 
-    // Use the built-in delegate directly.
     private val movieViewModel: MovieViewModel by viewModels()
 
+    // This function is used to start the MovieDetailsActivity with the provided IMDb ID and an optional flag indicating if it was opened from favorites.
+    // It creates an Intent, adds the IMDb ID and the flag as extras, and starts the activity.
+    // The function is marked as companion object, so it can be called without creating an instance of MovieDetailsActivity.
+    // The function is private to restrict its visibility to this class only.
     companion object {
         private const val EXTRA_IMDB_ID = "extra_imdb_id"
         private const val EXTRA_FROM_FAVORITES = "extra_from_favorites"
@@ -57,17 +60,20 @@ class MovieDetailsActivity : AppCompatActivity() {
             movieViewModel.getMovieDetails(imdbID)
         }
 
-        // Adjust UI for favorites mode.
+        // Set the title of the activity based on whether it was opened from favorites or not.
+        // If opened from favorites, set the title to "Movie Details (Favorites)".
+        // Otherwise, set it to "Movie Details".
         if (openedFromFavorites) {
             binding.favoriteActionButton.text = "Remove from Favorites"
             binding.updateDescriptionButton.visibility = android.view.View.VISIBLE
-            // Make description non-editable initially.
             binding.moviePlot.isFocusable = false
             binding.moviePlot.isClickable = false
         } else {
             binding.updateDescriptionButton.visibility = android.view.View.GONE
         }
 
+        // Observe the movie data from the ViewModel and update the UI accordingly.
+        // The movie data includes various details such as title, year, rating, etc.
         movieViewModel.movieData.observe(this) { movie ->
             binding.movieTitle.text = movie.Title
             binding.movieYear.text = movie.Year
@@ -187,7 +193,11 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
         }
 
-        // Favorite action button: add or remove.
+        // Favorite action button functionality.
+        // If the user is not signed in, show a toast message and return.
+        // If not opened from favorites, add the movie to favorites.
+        // If opened from favorites, show a confirmation dialog to remove the movie from favorites.
+        // If the user confirms, remove the movie from favorites and finish the activity.
         binding.favoriteActionButton.setOnClickListener {
             val uid = Firebase.auth.currentUser?.uid
             if (uid == null) {
@@ -196,7 +206,6 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
 
             if (!openedFromFavorites) {
-                // Add to favorites.
                 val description = binding.moviePlot.text.toString().trim()
                 lifecycleScope.launch {
                     try {
@@ -225,7 +234,6 @@ class MovieDetailsActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                // Remove from favorites.
                 AlertDialog.Builder(this)
                     .setTitle("Remove from Favorites")
                     .setMessage("Are you sure you want to remove this movie from favorites?")

@@ -10,6 +10,8 @@ import com.google.firebase.auth.FirebaseAuth
 
 class SignInActivity : AppCompatActivity() {
 
+    // SIgn In Activity is responsible for user login.
+    // It validates user input, signs in the user with Firebase Authentication,
     private lateinit var binding: SignInBinding
     private val auth = FirebaseAuth.getInstance()
 
@@ -47,6 +49,7 @@ class SignInActivity : AppCompatActivity() {
             }
         }
 
+        // Set up the register button to navigate to the RegisterActivity
         binding.registerBtn.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }

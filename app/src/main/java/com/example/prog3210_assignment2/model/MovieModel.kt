@@ -1,5 +1,7 @@
 package com.example.prog3210_assignment2.model
 
+// This is the data class for the movie details and search results
+// It contains all the fields returned by the OMDB API for a movie
 data class MovieModel(
     val Title: String = "",
     val Year: String = "",
@@ -28,11 +30,15 @@ data class MovieModel(
     val Response: String? = null
 )
 
+// This is the data class for the ratings of the movie
+// It contains the source and value of the rating
 data class Rating(
     val Source: String,
     val Value: String
 )
 
+// This is the data class for the search results of the movie
+// It contains the title, year, imdbID, type, and poster of the movie
 data class MovieSearchResult(
     val Title: String,
     val Year: String,
@@ -41,6 +47,8 @@ data class MovieSearchResult(
     val Poster: String
 )
 
+// This is the data class for the search response of the movie
+// It contains the list of search results, total results, and response status
 data class SearchResponse(
     val Search: List<MovieSearchResult>,
     val totalResults: String,

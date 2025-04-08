@@ -38,6 +38,7 @@ class SearchFragment : Fragment(), MovieClickListener {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
+        // Set up the search button and EditText for searching movies
         binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 doSearch()
@@ -51,6 +52,8 @@ class SearchFragment : Fragment(), MovieClickListener {
         }
     }
 
+    // validate the search input and trigger the search in the ViewModel
+    // If the input is empty, show a toast message to prompt the user to enter a movie title.
     private fun doSearch() {
         val query = binding.searchEditText.text.toString().trim()
         if (query.isNotEmpty()) {
@@ -60,6 +63,8 @@ class SearchFragment : Fragment(), MovieClickListener {
         }
     }
 
+    // Handle the click event for each movie item in the RecyclerView.
+    // When a movie is clicked, it checks if the movie ID is valid and starts the MovieDetailsActivity.
     override fun onClick(v: View?, pos: Int) {
         val movie: MovieSearchResult? = movieViewModel.searchResults.value?.get(pos)
         if (movie != null && movie.imdbID.isNotEmpty()) {
