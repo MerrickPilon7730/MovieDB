@@ -49,10 +49,13 @@ class FavoritesFragment : Fragment(), MovieClickListener {
             adapter = this@FavoritesFragment.adapter
         }
 
-        // Show loading indicator
         binding.loadingIndicator.visibility = View.VISIBLE
+        loadFavoriteMovies()
+    }
 
-        // Load favorites from Firestore
+    override fun onResume() {
+        super.onResume()
+        binding.loadingIndicator.visibility = View.VISIBLE
         loadFavoriteMovies()
     }
 
@@ -121,13 +124,11 @@ class FavoritesFragment : Fragment(), MovieClickListener {
         }
     }
 
-    // Called when user taps a movie in Favorites
     override fun onClick(v: View?, pos: Int) {
         val currentList = adapter.getItems()
         if (pos in currentList.indices) {
             val movie = currentList[pos]
             if (movie.imdbID.isNotEmpty()) {
-                // Pass `true` so that MovieDetailsActivity hides the 'Add to Favorites' button
                 MovieDetailsActivity.start(requireContext(), movie.imdbID, fromFavorites = true)
             }
         }
