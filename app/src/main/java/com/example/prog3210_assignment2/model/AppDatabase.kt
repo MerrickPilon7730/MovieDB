@@ -11,7 +11,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun favoriteDBOperation(): FavoriteDBOperation
 
     companion object {
-        @Volatile private var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
         fun getInstance(ctx: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {

@@ -17,7 +17,7 @@ class MyAdapter(
     var clickListener: MovieClickListener? = null
 
     fun setMovieClickListener(listener: MovieClickListener) {
-        this.clickListener = listener
+        clickListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -39,11 +39,5 @@ class MyAdapter(
         notifyDataSetChanged()
     }
 
-    /**
-     *  Provide read-only access to the current list,
-     *  so the fragment can retrieve the clicked item by position.
-     */
-    fun getItems(): List<MovieSearchResult> {
-        return items
-    }
+    fun getItems(): List<MovieSearchResult> = items
 }

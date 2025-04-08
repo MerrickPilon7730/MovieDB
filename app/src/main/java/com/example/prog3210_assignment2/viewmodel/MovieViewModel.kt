@@ -9,6 +9,10 @@ import com.example.prog3210_assignment2.model.MovieSearchResult
 import com.example.prog3210_assignment2.model.SearchResponse
 import com.example.prog3210_assignment2.utils.ApiClient
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -27,15 +31,12 @@ class MovieViewModel : ViewModel() {
     private val apiKey = "97d44d3e"
 
     fun searchForMovie(movieTitle: String) {
-        // Encode the movie title to handle spaces and special characters
         val encodedTitle = java.net.URLEncoder.encode(movieTitle, "UTF-8")
         val urlString = "https://www.omdbapi.com/?apikey=$apiKey&s=$encodedTitle&type=movie"
         apiClient.fetchMovieData(urlString, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // Log or handle error here
                 e.printStackTrace()
             }
-
             override fun onResponse(call: Call, response: Response) {
                 response.body?.let { responseBody ->
                     val json = responseBody.string()
@@ -59,7 +60,6 @@ class MovieViewModel : ViewModel() {
             override fun onResponse(call: Call, response: Response) {
                 response.body?.let { responseBody ->
                     val json = responseBody.string()
-                    // Log the JSON for debugging
                     Log.d("MovieDetails", json)
                     try {
                         val movie = gson.fromJson(json, MovieModel::class.java)
@@ -72,4 +72,30 @@ class MovieViewModel : ViewModel() {
         })
     }
 
+    suspend fun fetchMovieAsSearchResult(imdbId: String): MovieSearchResult? =
+        withContext(Dispatchers.IO) {
+            val url = "https://www.omdbapi.com/?apikey=$apiKey&i=$imdbId"
+            val request = Request.Builder().url(url).build()
+            val client = OkHttpClient()
+            try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        response.body?.string()?.let { json ->
+                            val movieDetail = gson.fromJson(json, MovieModel::class.java)
+                            return@withContext MovieSearchResult(
+                                Title = movieDetail.Title,
+                                Year = movieDetail.Year,
+                                imdbID = movieDetail.imdbID,
+                                Type = movieDetail.Type,
+                                Poster = movieDetail.Poster ?: ""
+                            )
+                        }
+                    }
+                    null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
 }

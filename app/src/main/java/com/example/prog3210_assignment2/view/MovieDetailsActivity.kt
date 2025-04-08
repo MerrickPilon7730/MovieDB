@@ -16,14 +16,16 @@ import com.example.prog3210_assignment2.viewmodel.MovieViewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
 
 class MovieDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMovieDetailsBinding
 
-    // Use the built‑in delegate (do not wrap with lazy { ... }).
+    // Use the built-in delegate directly.
     private val movieViewModel: MovieViewModel by viewModels()
 
     companion object {
@@ -31,10 +33,11 @@ class MovieDetailsActivity : AppCompatActivity() {
         private const val EXTRA_FROM_FAVORITES = "extra_from_favorites"
 
         fun start(context: Context, imdbID: String, fromFavorites: Boolean = false) {
-            val intent = Intent(context, MovieDetailsActivity::class.java)
-            intent.putExtra(EXTRA_IMDB_ID, imdbID)
-            intent.putExtra(EXTRA_FROM_FAVORITES, fromFavorites)
-            context.startActivity(intent)
+            Intent(context, MovieDetailsActivity::class.java).apply {
+                putExtra(EXTRA_IMDB_ID, imdbID)
+                putExtra(EXTRA_FROM_FAVORITES, fromFavorites)
+                context.startActivity(this)
+            }
         }
     }
 
@@ -54,18 +57,18 @@ class MovieDetailsActivity : AppCompatActivity() {
             movieViewModel.getMovieDetails(imdbID)
         }
 
-        // If opened from Favorites, adjust UI.
+        // Adjust UI for favorites mode.
         if (openedFromFavorites) {
             binding.favoriteActionButton.text = "Remove from Favorites"
             binding.updateDescriptionButton.visibility = android.view.View.VISIBLE
-            // Keep the description non-editable initially.
+            // Make description non-editable initially.
             binding.moviePlot.isFocusable = false
             binding.moviePlot.isClickable = false
         } else {
             binding.updateDescriptionButton.visibility = android.view.View.GONE
         }
 
-        // Populate movie details when available.
+        // Populate movie details from OMDb.
         movieViewModel.movieData.observe(this) { movie ->
             binding.movieTitle.text = movie.Title
             binding.movieYear.text = movie.Year
@@ -76,7 +79,7 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.movieDirector.text = "Director: ${movie.Director ?: "N/A"}"
             binding.movieWriter.text = "Writer: ${movie.Writer ?: "N/A"}"
             binding.movieActors.text = "Actors: ${movie.Actors ?: "N/A"}"
-            // Initially set moviePlot using OMDb data.
+            // Use OMDb plot initially.
             binding.moviePlot.setText(movie.Plot ?: "N/A")
             binding.movieAwards.text = "Awards: ${movie.Awards ?: "N/A"}"
             binding.movieBoxOffice.text = "Box Office: ${movie.BoxOffice ?: "N/A"}"
@@ -86,22 +89,18 @@ class MovieDetailsActivity : AppCompatActivity() {
                 .into(binding.moviePoster)
         }
 
-        // If opened from Favorites, fetch the updated description from Firestore.
+        // If in favorites mode, fetch updated description from Firestore.
         if (openedFromFavorites) {
-            val uid = Firebase.auth.currentUser?.uid
-            if (uid != null) {
+            Firebase.auth.currentUser?.uid?.let { uid ->
                 Firebase.firestore.collection("users")
                     .document(uid)
                     .collection("favorites")
                     .document(imdbID)
                     .get()
                     .addOnSuccessListener { document ->
-                        if (document != null && document.exists()) {
-                            val updatedDesc = document.getString("description")
-                            if (!updatedDesc.isNullOrEmpty()) {
-                                binding.moviePlot.setText(updatedDesc)
-                            }
-                        }
+                        document?.takeIf { it.exists() }?.getString("description")
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { binding.moviePlot.setText(it) }
                     }
                     .addOnFailureListener {
                         Toast.makeText(
@@ -113,10 +112,9 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
         }
 
-        binding.backButton.setOnClickListener {
-            finish()
-        }
+        binding.backButton.setOnClickListener { finish() }
 
+        // Update description functionality for favorites mode.
         if (openedFromFavorites) {
             binding.updateDescriptionButton.setOnClickListener {
                 val currentDesc = binding.moviePlot.text.toString()
@@ -144,17 +142,16 @@ class MovieDetailsActivity : AppCompatActivity() {
                                     .document(imdbID)
                                     .update("description", newDescription)
                                     .await()
-                                runOnUiThread {
+                                withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         this@MovieDetailsActivity,
                                         "Description updated",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    // Update the UI with the new description.
                                     binding.moviePlot.setText(newDescription)
                                 }
                             } catch (e: Exception) {
-                                runOnUiThread {
+                                withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         this@MovieDetailsActivity,
                                         "Error updating description: ${e.message}",
@@ -169,7 +166,7 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
         }
 
-        // Single button that either adds (if from search) or removes (if from favorites).
+        // Favorite action button: add or remove.
         binding.favoriteActionButton.setOnClickListener {
             val uid = Firebase.auth.currentUser?.uid
             if (uid == null) {
@@ -178,7 +175,7 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
 
             if (!openedFromFavorites) {
-                // Normal behavior: add to favorites.
+                // Add to favorites.
                 val description = binding.moviePlot.text.toString().trim()
                 lifecycleScope.launch {
                     try {
@@ -189,7 +186,7 @@ class MovieDetailsActivity : AppCompatActivity() {
                             .document(imdbID)
                             .set(mapOf("description" to description))
                             .await()
-                        runOnUiThread {
+                        withContext(Dispatchers.Main) {
                             Toast.makeText(
                                 this@MovieDetailsActivity,
                                 "Added to favorites",
@@ -197,7 +194,7 @@ class MovieDetailsActivity : AppCompatActivity() {
                             ).show()
                         }
                     } catch (e: Exception) {
-                        runOnUiThread {
+                        withContext(Dispatchers.Main) {
                             Toast.makeText(
                                 this@MovieDetailsActivity,
                                 "Error saving favorite: ${e.message}",
@@ -207,7 +204,7 @@ class MovieDetailsActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                // Behavior if opened from Favorites: remove from favorites.
+                // Remove from favorites.
                 AlertDialog.Builder(this)
                     .setTitle("Remove from Favorites")
                     .setMessage("Are you sure you want to remove this movie from favorites?")
@@ -221,16 +218,16 @@ class MovieDetailsActivity : AppCompatActivity() {
                                     .document(imdbID)
                                     .delete()
                                     .await()
-                                runOnUiThread {
+                                withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         this@MovieDetailsActivity,
                                         "Removed from favorites",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
-                                finish() // Return to favorites list.
+                                finish()
                             } catch (e: Exception) {
-                                runOnUiThread {
+                                withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         this@MovieDetailsActivity,
                                         "Error removing favorite: ${e.message}",

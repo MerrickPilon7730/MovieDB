@@ -35,14 +35,13 @@ class SearchFragment : Fragment(), MovieClickListener {
         adapter = MyAdapter(requireContext(), emptyList()).apply {
             setMovieClickListener(this@SearchFragment)
         }
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@SearchFragment.adapter
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
 
         binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                doSearch(); true
+                doSearch()
+                true
             } else false
         }
         binding.searchButton.setOnClickListener { doSearch() }
@@ -53,9 +52,12 @@ class SearchFragment : Fragment(), MovieClickListener {
     }
 
     private fun doSearch() {
-        val q = binding.searchEditText.text.toString().trim()
-        if (q.isNotEmpty()) movieViewModel.searchForMovie(q)
-        else Toast.makeText(requireContext(), "Enter a movie title", Toast.LENGTH_SHORT).show()
+        val query = binding.searchEditText.text.toString().trim()
+        if (query.isNotEmpty()) {
+            movieViewModel.searchForMovie(query)
+        } else {
+            Toast.makeText(requireContext(), "Enter a movie title", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onClick(v: View?, pos: Int) {
