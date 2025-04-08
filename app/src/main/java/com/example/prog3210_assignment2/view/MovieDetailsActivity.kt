@@ -3,7 +3,8 @@ package com.example.prog3210_assignment2.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -21,6 +22,8 @@ import kotlinx.coroutines.tasks.await
 class MovieDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMovieDetailsBinding
+
+    // Use the built‑in delegate (do not wrap with lazy { ... }).
     private val movieViewModel: MovieViewModel by viewModels()
 
     companion object {
@@ -51,18 +54,18 @@ class MovieDetailsActivity : AppCompatActivity() {
             movieViewModel.getMovieDetails(imdbID)
         }
 
-        // If opened from Favorites, adjust UI:
+        // If opened from Favorites, adjust UI.
         if (openedFromFavorites) {
             binding.favoriteActionButton.text = "Remove from Favorites"
-            binding.updateDescriptionButton.visibility = View.VISIBLE
-            // Ensure the description (moviePlot) is not editable initially.
+            binding.updateDescriptionButton.visibility = android.view.View.VISIBLE
+            // Keep the description non-editable initially.
             binding.moviePlot.isFocusable = false
             binding.moviePlot.isClickable = false
         } else {
-            binding.updateDescriptionButton.visibility = View.GONE
+            binding.updateDescriptionButton.visibility = android.view.View.GONE
         }
 
-        // Populate movie details when available
+        // Populate movie details when available.
         movieViewModel.movieData.observe(this) { movie ->
             binding.movieTitle.text = movie.Title
             binding.movieYear.text = movie.Year
@@ -73,7 +76,7 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.movieDirector.text = "Director: ${movie.Director ?: "N/A"}"
             binding.movieWriter.text = "Writer: ${movie.Writer ?: "N/A"}"
             binding.movieActors.text = "Actors: ${movie.Actors ?: "N/A"}"
-            // Initially set moviePlot using movie data returned from OMDb.
+            // Initially set moviePlot using OMDb data.
             binding.moviePlot.setText(movie.Plot ?: "N/A")
             binding.movieAwards.text = "Awards: ${movie.Awards ?: "N/A"}"
             binding.movieBoxOffice.text = "Box Office: ${movie.BoxOffice ?: "N/A"}"
@@ -114,58 +117,55 @@ class MovieDetailsActivity : AppCompatActivity() {
             finish()
         }
 
-        // Extra update description functionality in favorites mode
         if (openedFromFavorites) {
-            var isEditingDescription = false
             binding.updateDescriptionButton.setOnClickListener {
-                if (!isEditingDescription) {
-                    // Enable editing of the description field.
-                    binding.moviePlot.isFocusable = true
-                    binding.moviePlot.isFocusableInTouchMode = true
-                    binding.moviePlot.isClickable = true
-                    binding.moviePlot.requestFocus()
-                    binding.updateDescriptionButton.text = "Save Description"
-                    isEditingDescription = true
-                } else {
-                    // Save the updated description back to Firestore.
-                    val uid = Firebase.auth.currentUser?.uid
-                    if (uid == null) {
-                        Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    val newDescription = binding.moviePlot.text.toString().trim()
-                    lifecycleScope.launch {
-                        try {
-                            Firebase.firestore
-                                .collection("users")
-                                .document(uid)
-                                .collection("favorites")
-                                .document(imdbID)
-                                .update("description", newDescription)
-                                .await()
-                            runOnUiThread {
-                                Toast.makeText(
-                                    this@MovieDetailsActivity,
-                                    "Description updated",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        } catch (e: Exception) {
-                            runOnUiThread {
-                                Toast.makeText(
-                                    this@MovieDetailsActivity,
-                                    "Error updating description: ${e.message}",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                val currentDesc = binding.moviePlot.text.toString()
+                val input = EditText(this).apply {
+                    setText(currentDesc)
+                    setImeActionLabel("Save", EditorInfo.IME_ACTION_DONE)
+                    imeOptions = EditorInfo.IME_ACTION_DONE
+                }
+                AlertDialog.Builder(this)
+                    .setTitle("Update Description")
+                    .setView(input)
+                    .setPositiveButton("Update") { _, _ ->
+                        val newDescription = input.text.toString().trim()
+                        val uid = Firebase.auth.currentUser?.uid
+                        if (uid == null) {
+                            Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show()
+                            return@setPositiveButton
+                        }
+                        lifecycleScope.launch {
+                            try {
+                                Firebase.firestore
+                                    .collection("users")
+                                    .document(uid)
+                                    .collection("favorites")
+                                    .document(imdbID)
+                                    .update("description", newDescription)
+                                    .await()
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@MovieDetailsActivity,
+                                        "Description updated",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    // Update the UI with the new description.
+                                    binding.moviePlot.setText(newDescription)
+                                }
+                            } catch (e: Exception) {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@MovieDetailsActivity,
+                                        "Error updating description: ${e.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         }
                     }
-                    // Disable editing
-                    binding.moviePlot.isFocusable = false
-                    binding.moviePlot.isClickable = false
-                    binding.updateDescriptionButton.text = "Update Description"
-                    isEditingDescription = false
-                }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
         }
 
