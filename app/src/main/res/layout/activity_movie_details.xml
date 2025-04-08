@@ -135,12 +135,14 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/moviePoster" />
 
-            <TextView
+            <EditText
                 android:id="@+id/moviePlot"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:ellipsize="end"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:maxLines="20"
                 android:paddingTop="8dp"
                 android:text="Description:"
@@ -160,7 +162,7 @@
                 android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/moviePlot" />
+                app:layout_constraintTop_toBottomOf="@id/moviePlot" />
 
             <TextView
                 android:id="@+id/movieBoxOffice"
@@ -168,26 +170,44 @@
                 android:layout_height="30dp"
                 android:paddingTop="8dp"
                 android:text="Box Office"
-
                 android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/movieAwards" />
+                app:layout_constraintTop_toBottomOf="@id/movieAwards" />
 
-            <Button
-                android:id="@+id/addToFavoritesButton"
+            <LinearLayout
+                android:id="@+id/buttonContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:layout_marginTop="40dp"
-                android:text="Add to Favorites"
+                android:orientation="horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/movieAwards"
-                tools:layout_editor_absoluteX="24dp" />
+                app:layout_constraintTop_toBottomOf="@id/movieBoxOffice">
+
+                <Button
+                    android:id="@+id/favoriteActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#FF0000"
+                    android:text="Add to Favorites"
+                    android:textColor="@color/white" />
+
+                <Button
+                    android:id="@+id/updateDescriptionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#007C7C"
+                    android:layout_marginTop="3dp"
+                    android:text="Update Description"
+                    android:textColor="@color/white"
+                    android:visibility="gone" />
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-
     </ScrollView>
 
     <Button
@@ -200,5 +220,4 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

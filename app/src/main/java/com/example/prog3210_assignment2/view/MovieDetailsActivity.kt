@@ -3,6 +3,7 @@ package com.example.prog3210_assignment2.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -50,12 +51,18 @@ class MovieDetailsActivity : AppCompatActivity() {
             movieViewModel.getMovieDetails(imdbID)
         }
 
-        // If we opened this from Favorites, rename the button and change its behavior.
+        // If opened from Favorites, adjust UI:
         if (openedFromFavorites) {
-            binding.addToFavoritesButton.text = "Remove from Favorites"
+            binding.favoriteActionButton.text = "Remove from Favorites"
+            binding.updateDescriptionButton.visibility = View.VISIBLE
+            // Ensure the description (moviePlot) is not editable initially.
+            binding.moviePlot.isFocusable = false
+            binding.moviePlot.isClickable = false
+        } else {
+            binding.updateDescriptionButton.visibility = View.GONE
         }
 
-        // Observe and populate movie details
+        // Populate movie details when available
         movieViewModel.movieData.observe(this) { movie ->
             binding.movieTitle.text = movie.Title
             binding.movieYear.text = movie.Year
@@ -66,7 +73,8 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.movieDirector.text = "Director: ${movie.Director ?: "N/A"}"
             binding.movieWriter.text = "Writer: ${movie.Writer ?: "N/A"}"
             binding.movieActors.text = "Actors: ${movie.Actors ?: "N/A"}"
-            binding.moviePlot.text = "Plot: ${movie.Plot ?: "N/A"}"
+            // Initially set moviePlot using movie data returned from OMDb.
+            binding.moviePlot.setText(movie.Plot ?: "N/A")
             binding.movieAwards.text = "Awards: ${movie.Awards ?: "N/A"}"
             binding.movieBoxOffice.text = "Box Office: ${movie.BoxOffice ?: "N/A"}"
 
@@ -75,12 +83,94 @@ class MovieDetailsActivity : AppCompatActivity() {
                 .into(binding.moviePoster)
         }
 
+        // If opened from Favorites, fetch the updated description from Firestore.
+        if (openedFromFavorites) {
+            val uid = Firebase.auth.currentUser?.uid
+            if (uid != null) {
+                Firebase.firestore.collection("users")
+                    .document(uid)
+                    .collection("favorites")
+                    .document(imdbID)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        if (document != null && document.exists()) {
+                            val updatedDesc = document.getString("description")
+                            if (!updatedDesc.isNullOrEmpty()) {
+                                binding.moviePlot.setText(updatedDesc)
+                            }
+                        }
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(
+                            this,
+                            "Error fetching updated description",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+            }
+        }
+
         binding.backButton.setOnClickListener {
             finish()
         }
 
-        // Single button that can either ADD or REMOVE depending on `openedFromFavorites`
-        binding.addToFavoritesButton.setOnClickListener {
+        // Extra update description functionality in favorites mode
+        if (openedFromFavorites) {
+            var isEditingDescription = false
+            binding.updateDescriptionButton.setOnClickListener {
+                if (!isEditingDescription) {
+                    // Enable editing of the description field.
+                    binding.moviePlot.isFocusable = true
+                    binding.moviePlot.isFocusableInTouchMode = true
+                    binding.moviePlot.isClickable = true
+                    binding.moviePlot.requestFocus()
+                    binding.updateDescriptionButton.text = "Save Description"
+                    isEditingDescription = true
+                } else {
+                    // Save the updated description back to Firestore.
+                    val uid = Firebase.auth.currentUser?.uid
+                    if (uid == null) {
+                        Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    val newDescription = binding.moviePlot.text.toString().trim()
+                    lifecycleScope.launch {
+                        try {
+                            Firebase.firestore
+                                .collection("users")
+                                .document(uid)
+                                .collection("favorites")
+                                .document(imdbID)
+                                .update("description", newDescription)
+                                .await()
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@MovieDetailsActivity,
+                                    "Description updated",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } catch (e: Exception) {
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@MovieDetailsActivity,
+                                    "Error updating description: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    }
+                    // Disable editing
+                    binding.moviePlot.isFocusable = false
+                    binding.moviePlot.isClickable = false
+                    binding.updateDescriptionButton.text = "Update Description"
+                    isEditingDescription = false
+                }
+            }
+        }
+
+        // Single button that either adds (if from search) or removes (if from favorites).
+        binding.favoriteActionButton.setOnClickListener {
             val uid = Firebase.auth.currentUser?.uid
             if (uid == null) {
                 Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show()
@@ -88,7 +178,7 @@ class MovieDetailsActivity : AppCompatActivity() {
             }
 
             if (!openedFromFavorites) {
-                // 1) Normal behavior: add to favorites
+                // Normal behavior: add to favorites.
                 val description = binding.moviePlot.text.toString().trim()
                 lifecycleScope.launch {
                     try {
@@ -96,10 +186,9 @@ class MovieDetailsActivity : AppCompatActivity() {
                             .collection("users")
                             .document(uid)
                             .collection("favorites")
-                            .document(imdbID!!)
+                            .document(imdbID)
                             .set(mapOf("description" to description))
                             .await()
-
                         runOnUiThread {
                             Toast.makeText(
                                 this@MovieDetailsActivity,
@@ -118,22 +207,20 @@ class MovieDetailsActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                // 2) Behavior if opened FROM favorites: remove from favorites
+                // Behavior if opened from Favorites: remove from favorites.
                 AlertDialog.Builder(this)
                     .setTitle("Remove from Favorites")
                     .setMessage("Are you sure you want to remove this movie from favorites?")
                     .setPositiveButton("Yes") { _, _ ->
-                        // Actually remove from Firestore
                         lifecycleScope.launch {
                             try {
                                 Firebase.firestore
                                     .collection("users")
                                     .document(uid)
                                     .collection("favorites")
-                                    .document(imdbID!!)
+                                    .document(imdbID)
                                     .delete()
                                     .await()
-
                                 runOnUiThread {
                                     Toast.makeText(
                                         this@MovieDetailsActivity,
@@ -141,8 +228,7 @@ class MovieDetailsActivity : AppCompatActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
-                                // Close this activity so user returns to favorites list
-                                finish()
+                                finish() // Return to favorites list.
                             } catch (e: Exception) {
                                 runOnUiThread {
                                     Toast.makeText(
