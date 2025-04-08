@@ -7,7 +7,6 @@ import okhttp3.Request
 
 class ApiClient {
     private val client = OkHttpClient()
-    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
     fun fetchMovieData(url: String, callback: Callback) {
         val request = Request.Builder()
