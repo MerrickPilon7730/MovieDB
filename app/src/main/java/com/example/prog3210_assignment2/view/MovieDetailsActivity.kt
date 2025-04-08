@@ -11,6 +11,10 @@ import com.example.prog3210_assignment2.databinding.ActivityMovieDetailsBinding
 import com.example.prog3210_assignment2.viewmodel.MovieViewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.ktx.auth
+import kotlinx.coroutines.tasks.await
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 
 class MovieDetailsActivity : AppCompatActivity() {
@@ -58,29 +62,45 @@ class MovieDetailsActivity : AppCompatActivity() {
                 .load(movie.Poster)
                 .into(binding.moviePoster)
         }
-        binding.addToFavoritesButton.setOnClickListener {
-            val movie = movieViewModel.movieData.value
-            if (movie != null && movie.imdbID.isNotEmpty()) {
-                val favMap = hashMapOf(
-                    "title" to movie.Title,
-                    "year" to movie.Year,
-                    "poster" to movie.Poster,
-                    "imdbID" to movie.imdbID
-                )
 
-                Firebase.firestore.collection("favorites")
-                    .document(movie.imdbID)
-                    .set(favMap)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Failed to add: ${it.message}", Toast.LENGTH_SHORT).show()
-                    }
-            }
-        }
         binding.backButton.setOnClickListener {
             finish()
+        }
+
+        binding.addToFavoritesButton.setOnClickListener {
+            val uid = Firebase.auth.currentUser?.uid
+            if (uid == null) {
+                Toast.makeText(this, "Please sign in first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val imdbId     = intent.getStringExtra(EXTRA_IMDB_ID)!!
+            val description = binding.moviePlot.text.toString().trim()
+
+            // write to Firestore
+            lifecycleScope.launch {
+                try {
+                    Firebase
+                        .firestore
+                        .collection("users")
+                        .document(uid)
+                        .collection("favorites")
+                        .document(imdbId)
+                        .set(mapOf("description" to description))
+                        .await()
+
+                    runOnUiThread {
+                        Toast.makeText(this@MovieDetailsActivity,
+                            "Added to favorites", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        Toast.makeText(this@MovieDetailsActivity,
+                            "Error saving favorite: ${e.message}",
+                            Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 }
