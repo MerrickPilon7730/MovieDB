@@ -68,7 +68,6 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.updateDescriptionButton.visibility = android.view.View.GONE
         }
 
-        // Populate movie details from OMDb.
         movieViewModel.movieData.observe(this) { movie ->
             binding.movieTitle.text = movie.Title
             binding.movieYear.text = movie.Year
@@ -79,7 +78,6 @@ class MovieDetailsActivity : AppCompatActivity() {
             binding.movieDirector.text = "Director: ${movie.Director ?: "N/A"}"
             binding.movieWriter.text = "Writer: ${movie.Writer ?: "N/A"}"
             binding.movieActors.text = "Actors: ${movie.Actors ?: "N/A"}"
-            // Use OMDb plot initially.
             binding.moviePlot.setText(movie.Plot ?: "N/A")
             binding.movieAwards.text = "Awards: ${movie.Awards ?: "N/A"}"
             binding.movieBoxOffice.text = "Box Office: ${movie.BoxOffice ?: "N/A"}"
@@ -87,7 +85,30 @@ class MovieDetailsActivity : AppCompatActivity() {
             Glide.with(this)
                 .load(movie.Poster)
                 .into(binding.moviePoster)
+
+            // If opened from favorites, override the description with the one from Firestore.
+            if (openedFromFavorites) {
+                Firebase.auth.currentUser?.uid?.let { uid ->
+                    Firebase.firestore.collection("users")
+                        .document(uid)
+                        .collection("favorites")
+                        .document(imdbID)
+                        .get()
+                        .addOnSuccessListener { document ->
+                            if (document != null && document.exists()) {
+                                val updatedDesc = document.getString("description")
+                                if (!updatedDesc.isNullOrEmpty()) {
+                                    binding.moviePlot.setText(updatedDesc)
+                                }
+                            }
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Error fetching updated description", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
         }
+
 
         // If in favorites mode, fetch updated description from Firestore.
         if (openedFromFavorites) {
